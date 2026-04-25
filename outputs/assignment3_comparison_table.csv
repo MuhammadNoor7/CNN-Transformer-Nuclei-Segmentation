@@ -1,0 +1,5 @@
+Experiment,Evidence,Dataset,mPQ,F1_detection,Status
+CellViT literature baseline (PanNuke),Official paper logs in repo,PanNuke,48.266090762847966,82.44356794913057,Completed
+Improved Reproduction (Stronger A2 Baseline),outputs\assignment2_improved_results.json,PanNuke,14.22150140247017,31.493393801215095,Completed
+Cross-domain evaluation (best per fold),MoNuSeg inference logs,MoNuSeg,,84.83027653262168,Completed
+CART proposed method,Implementation scaffold in this notebook,PanNuke / MoNuSeg,,,Configured for future run

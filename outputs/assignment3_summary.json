@@ -1,0 +1,10 @@
+{
+  "assignment2_mean_mPQ": 14.22,
+  "assignment2_mean_F1_detection": 31.49,
+  "paper_mean_mPQ": 48.27,
+  "paper_mean_F1_detection": 82.44,
+  "monuseg_best_mean_bPQ": 66.21,
+  "monuseg_best_mean_dice": 83.24,
+  "monuseg_best_mean_f1_detection": 84.83,
+  "note": "CART kept as proposed method scaffold; no fabricated performance claims included."
+}

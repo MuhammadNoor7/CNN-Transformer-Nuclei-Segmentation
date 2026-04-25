@@ -1,0 +1,35 @@
+[
+  {
+    "PQ_Neoplastic": 0.18640826406927902,
+    "PQ_Inflammatory": 0.0,
+    "PQ_Connective": 0.08378336375546357,
+    "PQ_Dead": 0.0,
+    "PQ_Epithelial": 0.09502537812200355,
+    "mPQ": 0.07304340118934924,
+    "F1_detection": 0.22969615899101853,
+    "fold": 1,
+    "best_epoch": 10
+  },
+  {
+    "PQ_Neoplastic": 0.1724999115374165,
+    "PQ_Inflammatory": 0.0,
+    "PQ_Connective": 0.0975422369050622,
+    "PQ_Dead": 0.0,
+    "PQ_Epithelial": 0.09386997394274911,
+    "mPQ": 0.07278242447704555,
+    "F1_detection": 0.22906174221227382,
+    "fold": 2,
+    "best_epoch": 10
+  },
+  {
+    "PQ_Neoplastic": 0.17335447741362248,
+    "PQ_Inflammatory": 0.0,
+    "PQ_Connective": 0.09844099230422522,
+    "PQ_Dead": 0.0,
+    "PQ_Epithelial": 0.0973593199819761,
+    "mPQ": 0.07383095793996476,
+    "F1_detection": 0.2271880819366853,
+    "fold": 3,
+    "best_epoch": 10
+  }
+]

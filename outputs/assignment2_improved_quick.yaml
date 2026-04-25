@@ -1,0 +1,111 @@
+logging:
+  mode: offline
+  project: Assignment2-Improved-CellViT
+  notes: Improved reproduction with better hardware and shorter quick-run budget
+  log_comment: assignment2-improved-quick
+  tags:
+    - assignment2
+    - improved-reproduction
+    - quick-run
+  wandb_dir: d:/spring 26/CNN-Transformer-Nuclei-Segmentation-main/CNN-Transformer-Nuclei-Segmentation-main/outputs/wandb
+  log_dir: d:/spring 26/CNN-Transformer-Nuclei-Segmentation-main/CNN-Transformer-Nuclei-Segmentation-main/outputs/assignment2_improved_runs
+  level: info
+  log_images: false
+  group: assignment2-improved
+
+random_seed: 42
+gpu: 0
+
+data:
+  dataset: PanNuke
+  dataset_path: d:/spring 26/CNN-Transformer-Nuclei-Segmentation-main/CNN-Transformer-Nuclei-Segmentation-main/data/pannuke_prepared
+  train_folds: [0, 1]
+  val_folds: [2]
+  test_folds: [2]
+  num_nuclei_classes: 6
+  num_tissue_classes: 19
+  input_shape: 256
+
+model:
+  backbone: ViT256
+  pretrained_encoder: ./models/pretrained/ViT-256/vit256_small_dino.pth
+  shared_skip_connections: true
+
+loss:
+  nuclei_binary_map:
+    focaltverskyloss:
+      loss_fn: FocalTverskyLoss
+      weight: 1
+    dice:
+      loss_fn: dice_loss
+      weight: 1
+  hv_map:
+    mse:
+      loss_fn: mse_loss_maps
+      weight: 2.5
+    msge:
+      loss_fn: msge_loss_maps
+      weight: 8
+  nuclei_type_map:
+    bce:
+      loss_fn: xentropy_loss
+      weight: 0.5
+    dice:
+      loss_fn: dice_loss
+      weight: 0.2
+    mcfocaltverskyloss:
+      loss_fn: MCFocalTverskyLoss
+      weight: 0.5
+      args:
+        num_classes: 6
+  tissue_types:
+    ce:
+      loss_fn: CrossEntropyLoss
+      weight: 0.1
+
+training:
+  drop_rate: 0
+  attn_drop_rate: 0.1
+  drop_path_rate: 0.1
+  batch_size: 8
+  epochs: 20
+  optimizer: AdamW
+  early_stopping_patience: 6
+  scheduler:
+    scheduler_type: exponential
+    hyperparameters:
+      gamma: 0.9
+  optimizer_hyperparameter:
+    betas: [0.85, 0.95]
+    lr: 0.0002
+    weight_decay: 0.0001
+  unfreeze_epoch: 0
+  sampling_gamma: 0.85
+  sampling_strategy: cell+tissue
+  mixed_precision: true
+  eval_every: 1
+
+transformations:
+  randomrotate90:
+    p: 0.5
+  horizontalflip:
+    p: 0.5
+  verticalflip:
+    p: 0.5
+  blur:
+    p: 0.2
+    blur_limit: 7
+  gaussnoise:
+    p: 0.15
+    var_limit: 20
+  colorjitter:
+    p: 0.2
+    scale_setting: 0.2
+    scale_color: 0.1
+  normalize:
+    mean: [0.5, 0.5, 0.5]
+    std: [0.5, 0.5, 0.5]
+
+eval_checkpoint: best_checkpoint.pth
+run_sweep: false
+agent: null

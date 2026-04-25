@@ -1,0 +1,33 @@
+{
+  "objective": "Improved CellViT reproduction under better hardware and cleaner training design",
+  "strategy": {
+    "encoder": "Unfrozen from epoch 0",
+    "epochs_quick_run": 20,
+    "epochs_full_run": 40,
+    "batch_size_target": 8,
+    "mixed_precision": true,
+    "sampling_strategy": "cell+tissue",
+    "class_imbalance_response": "weighted sampling in official CellViT pipeline; class-weighted CE recommended for custom track",
+    "evaluation_checkpoint": "best_checkpoint.pth",
+    "early_stopping_patience": 6,
+    "quick_run_budget": "1 fold in 2-2.5 hours",
+    "recommended_quick_split": {
+      "train_folds": [
+        0,
+        1
+      ],
+      "val_folds": [
+        2
+      ],
+      "test_folds": [
+        2
+      ]
+    }
+  },
+  "expected_improvements": [
+    "higher mPQ than constrained reproduction",
+    "higher F1 detection than constrained reproduction",
+    "better rare-class behavior due to stronger sampling and longer training",
+    "cleaner experiment logs for Assignment 3 reuse"
+  ]
+}
