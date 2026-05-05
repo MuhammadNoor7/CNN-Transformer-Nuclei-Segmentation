@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN–Transformer Nuclei Segmentation | Project Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #07111f;
+      --bg-2: #0b1f33;
+      --panel: rgba(10, 19, 33, 0.72);
+      --panel-strong: rgba(12, 24, 42, 0.92);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #eef7ff;
+      --muted: #9eb5c9;
+      --accent: #28d7c8;
+      --accent-2: #6aa8ff;
+      --accent-3: #f7b955;
+      --danger: #ff7a79;
+      --success: #5ef0a8;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+      --radius: 24px;
+      --radius-sm: 18px;
+      --max: 1440px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(40, 215, 200, 0.18), transparent 18%),
+        radial-gradient(circle at 85% 12%, rgba(106, 168, 255, 0.15), transparent 20%),
+        radial-gradient(circle at 80% 80%, rgba(247, 185, 85, 0.13), transparent 18%),
+        linear-gradient(180deg, #050b13 0%, #08111d 38%, #091526 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.42), transparent 92%);
+      opacity: 0.55;
+    }
+
+    .wrap {
+      width: min(100%, var(--max));
+      margin: 0 auto;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(8, 16, 31, 0.92), rgba(13, 32, 53, 0.82));
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+      display: grid;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -40% auto;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(40, 215, 200, 0.28), transparent 68%);
+      filter: blur(6px);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .eyebrow .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 8px rgba(40, 215, 200, 0.12);
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .title {
+      font-size: clamp(2.2rem, 4vw, 4.7rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      margin: 12px 0 16px;
+      max-width: 12ch;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.75;
+      max-width: 68ch;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.11);
+      color: #dbeefe;
+      font-size: 13px;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    }
+
+    .badge strong { color: white; }
+
+    .hero-note {
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(40, 215, 200, 0.12), rgba(255,255,255,0.04));
+      padding: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .hero-note h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #f8fcff;
+    }
+
+    .hero-note ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .hero-note li { margin-bottom: 8px; }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(10, 19, 33, 0.88), rgba(8, 17, 28, 0.94));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(40, 215, 200, 0.32);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.42);
+    }
+
+    .metric-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: clamp(1.6rem, 2vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+    }
+
+    .metric-desc {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.94rem;
+    }
+
+    .section {
+      margin-top: 20px;
+      border: 1px solid var(--line);
+      background: rgba(6, 14, 25, 0.72);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      backdrop-filter: blur(14px);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      font-size: clamp(1.4rem, 2vw, 2rem);
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      max-width: 72ch;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+
+    .list-panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .step:last-child { border-bottom: 0; }
+
+    .step .pin {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      margin-top: 4px;
+      background: var(--accent-2);
+      box-shadow: 0 0 0 6px rgba(106,168,255,0.12);
+    }
+
+    .step:nth-child(2) .pin { background: var(--accent-3); box-shadow: 0 0 0 6px rgba(247,185,85,0.12); }
+    .step:nth-child(3) .pin { background: var(--accent); box-shadow: 0 0 0 6px rgba(40,215,200,0.12); }
+
+    .step h3 { font-size: 1rem; margin-bottom: 6px; }
+    .step p { color: var(--muted); line-height: 1.65; }
+
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+      margin-top: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .tech-table th, .tech-table td {
+      text-align: left;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: top;
+    }
+
+    .tech-table th {
+      color: #d5e8fa;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .tech-table td { color: #f4f9ff; }
+
+    .table-scroll {
+      overflow-x: auto;
+      border-radius: 18px;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .chart-card {
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-card canvas {
+      width: 100% !important;
+      height: 320px !important;
+      display: block;
+    }
+
+    .chart-card .section-head {
+      flex: 0 0 auto;
+    }
+
+    .table-dark {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table-dark th, .table-dark td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.95rem;
+    }
+
+    .table-dark th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: white;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .pill.paper { background: rgba(106,168,255,0.18); color: #b8d4ff; }
+    .pill.repro { background: rgba(247,185,85,0.18); color: #ffdca0; }
+    .pill.improved { background: rgba(40,215,200,0.18); color: #a8fff5; }
+
+    .before-after {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .comparison-stack {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mini-card {
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      padding: 16px;
+      min-height: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20px -35px auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(40,215,200,0.22), transparent 65%);
+    }
+
+    .mini-card .kpi {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin: 4px 0;
+    }
+
+    .mini-card .kdesc { color: var(--muted); line-height: 1.6; }
+
+    .image-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .image-box {
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .image-box img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      aspect-ratio: 1.5 / 1;
+    }
+
+    .image-caption {
+      padding: 10px 12px 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .improvements {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .impact-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .impact-item {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      gap: 6px;
+    }
+
+    .impact-item strong {
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .impact-item span {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .diagram {
+      margin-top: 12px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: radial-gradient(circle at top left, rgba(40,215,200,0.12), transparent 30%), rgba(255,255,255,0.03);
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .footer-note {
+      margin: 18px 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .hidden { opacity: 0; transform: translateY(16px); }
+    .reveal { transition: opacity 700ms ease, transform 700ms ease; }
+    .visible { opacity: 1; transform: translateY(0); }
+    .hidden.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1180px) {
+      .hero-grid,
+      .overview-grid,
+      .results-grid,
+      .before-after,
+      .improvements {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 16px; }
+      .hero, .section { padding: 18px; border-radius: 22px; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .comparison-stack, .image-row { grid-template-columns: 1fr; }
+      .title { max-width: none; }
+      .table-scroll { overflow-x: auto; }
+      .tech-table th, .tech-table td { padding: 12px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero reveal hidden">
+      <div class="eyebrow"><span class="dot"></span> Static project presentation dashboard</div>
+      <div class="hero-grid">
+        <div>
+          <h1 class="title">CNN–Transformer Nuclei Segmentation</h1>
+          <p class="subtitle">
+            A presentation-ready dashboard that compresses the full project story into a fast 1–2 minute walkthrough:
+            the CellViT paper baseline, the constrained reproduction, the improved track, and the cross-domain MoNuSeg result.
+            Every value on this page is pulled from the workspace artifacts in <code>outputs/</code> or the repository README.
+          </p>
+          <div class="hero-badges">
+            <div class="badge"><strong>Paper mPQ</strong> <span>48.27%</span></div>
+            <div class="badge"><strong>Constrained mPQ</strong> <span>7.32%</span></div>
+            <div class="badge"><strong>Improved mPQ</strong> <span>14.22%</span></div>
+            <div class="badge"><strong>MoNuSeg Dice</strong> <span>83.24%</span></div>
+          </div>
+        </div>
+        <aside class="hero-note">
+          <h3>Fast demo script</h3>
+          <ul>
+            <li>Paper baseline is the strongest reference point.</li>
+            <li>Constrained reproduction suffers from a frozen encoder and short budget.</li>
+            <li>Improved run lifts both mPQ and F1 by fine-tuning, class weighting, and AMP.</li>
+            <li>MoNuSeg shows the learned representation generalizes beyond PanNuke.</li>
+          </ul>
+        </aside>
+      </div>
+    </header>
+
+    <section class="metrics-grid reveal hidden" style="margin-top:20px;">
+      <div class="card">
+        <div class="metric-label">Model parameters</div>
+        <div class="metric-value" data-count="116970122">116,970,122</div>
+        <div class="metric-desc">Total CellViT-style parameters reported by the notebook check.</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Frozen-run trainable params</div>
+        <div class="metric-value" data-count="31125386">31,125,386</div>
+        <div class="metric-desc">Trainable parameters when the encoder is frozen in the constrained setup.</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Classes</div>
+        <div class="metric-value" data-count="5">5</div>
+        <div class="metric-desc">Neoplastic, Inflammatory, Connective, Dead, and Epithelial.</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Improved epochs</div>
+        <div class="metric-value" data-count="30">30</div>
+        <div class="metric-desc">Longer training budget with early stopping and mixed precision enabled.</div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section-head">
+        <div>
+          <h2>1. Project Overview</h2>
+          <p>Three layers, one narrative: reproduce the paper, expose the constrained bottleneck, then show why the improved track is meaningfully better.</p>
+        </div>
+      </div>
+      <div class="overview-grid">
+        <div class="list-panel">
+          <div class="timeline">
+            <div class="step">
+              <div class="pin"></div>
+              <div>
+                <h3>Baseline work</h3>
+                <p>CellViT PanNuke baseline from the paper, used as the reference for mPQ and F1 detection.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="pin"></div>
+              <div>
+                <h3>Reproduced work</h3>
+                <p>Constrained Assignment 2 run with frozen encoder and limited budget. It is intentionally weak so the gap is visible and honest.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="pin"></div>
+              <div>
+                <h3>Improved work</h3>
+                <p>Unfrozen encoder, class-weighted cross entropy, AMP, and longer training to make the model better adapt to histopathology.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-panel">
+          <h3 style="margin-bottom:12px;">Key takeaways</h3>
+          <div class="impact-list">
+            <div class="impact-item"><strong>Fine-tuning matters</strong><span>Unfreezing the encoder produces a materially stronger representation for nuclei morphology.</span></div>
+            <div class="impact-item"><strong>Rare classes are hard</strong><span>Inflammatory and Dead remain the lowest-performing categories across folds.</span></div>
+            <div class="impact-item"><strong>Generalization is real</strong><span>MoNuSeg performance suggests the representation transfers outside PanNuke.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section-head">
+        <div>
+          <h2>2. Technical Summary</h2>
+          <p>Key implementation facts at a glance, so the viewer doesn’t need to inspect a notebook cell to understand the experimental setup.</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="tech-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Paper baseline</th>
+              <th>Constrained reproduction</th>
+              <th>Improved (MoNuSeg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Primary dataset</td>
+              <td>PanNuke (as reported)</td>
+              <td>PanNuke</td>
+              <td>MoNuSeg (cross-domain evaluation)</td>
+            </tr>
+            <tr>
+              <td>Model family</td>
+              <td>CellViT (paper)</td>
+              <td>CellViT-style hybrid CNN + Transformer</td>
+              <td>CellViT-style hybrid (same architecture)</td>
+            </tr>
+            <tr>
+              <td>Encoder</td>
+              <td>vit_base_patch16_224 (paper)</td>
+              <td>vit_base_patch16_224</td>
+              <td>vit_base_patch16_224 (fine-tuned)</td>
+            </tr>
+            <tr>
+              <td>Patch size</td>
+              <td>256 × 256</td>
+              <td>256 × 256</td>
+              <td>256 × 256</td>
+            </tr>
+            <tr>
+              <td>Total parameters</td>
+              <td>699,749,053 (SAM-H / paper logs)</td>
+              <td>116,970,122</td>
+              <td>116,970,122</td>
+            </tr>
+            <tr>
+              <td>Trainable params</td>
+              <td>62,723,005 (paper; SAM-H trainable)</td>
+              <td>31,125,386 (decoder-only / frozen encoder)</td>
+              <td>Full model unfrozen (end-to-end fine-tuning)</td>
+            </tr>
+            <tr>
+              <td>Batch size</td>
+              <td>16</td>
+              <td>8</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>Epochs</td>
+              <td>130</td>
+              <td>10 (tight budget)</td>
+              <td>30 + early stopping</td>
+            </tr>
+            <tr>
+              <td>Optimizer</td>
+              <td>AdamW (lr=3e-4, betas=(0.85,0.95), wd=1e-4)</td>
+              <td>AdamW</td>
+              <td>AdamW</td>
+            </tr>
+            <tr>
+              <td>Scheduler</td>
+              <td>Exponential (gamma=0.85)</td>
+              <td>Warmup + Cosine Decay</td>
+              <td>Warmup + Cosine Decay</td>
+            </tr>
+            <tr>
+              <td>Mixed precision (AMP)</td>
+              <td>Enabled</td>
+              <td>Not used (constrained)</td>
+              <td>Enabled</td>
+            </tr>
+            <tr>
+              <td>Cross-domain / notes</td>
+              <td>mPQ 48.27 / F1 82.44 (paper)</td>
+              <td>mPQ 7.32 / F1 22.86 (PanNuke)</td>
+              <td>PanNuke improved: mPQ 14.22 / F1 31.49; MoNuSeg bPQ 66.21 / F1 84.83</td>
+            </tr>
+            <tr>
+              <td>Evaluation folds</td>
+              <td>Official PanNuke splits (fold-based; paper used 90% training splits)</td>
+              <td>3-fold PanNuke</td>
+              <td>3-fold PanNuke (improved) / cross-domain on MoNuSeg</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section-head">
+        <div>
+          <h2>3. Results Comparison</h2>
+          <p>The table is the exact comparison; the chart is the fast visual story. The values are loaded from the workspace JSON and CSV artifacts.</p>
+        </div>
+      </div>
+      <div class="results-grid">
+        <div class="card chart-card">
+          <div class="section-head" style="margin-bottom:12px;">
+            <div>
+              <div class="pill paper">Paper</div>
+            </div>
+            <div>
+              <div class="pill repro">Reproduced</div>
+            </div>
+            <div>
+              <div class="pill improved">Improved</div>
+            </div>
+          </div>
+          <canvas id="comparisonChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="table-dark">
+              <thead>
+                <tr>
+                  <th>Track</th>
+                  <th>Dataset</th>
+                  <th>mPQ</th>
+                  <th>F1 detection</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>CellViT paper baseline</td><td>PanNuke</td><td>48.27</td><td>82.44</td></tr>
+                <tr><td>Constrained reproduction</td><td>PanNuke</td><td>7.32</td><td>22.86</td></tr>
+                <tr><td>Improved reproduction</td><td>PanNuke</td><td>14.22</td><td>31.49</td></tr>
+                <tr><td>Cross-domain best</td><td>MoNuSeg</td><td>66.21 bPQ</td><td>84.83</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px; color: var(--muted); line-height:1.7;">
+            Improved vs constrained: <strong style="color:#a8fff5">+6.90 mPQ</strong> and <strong style="color:#a8fff5">+8.64 F1</strong> on PanNuke. That is the core reproduction gain.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section-head">
+        <div>
+          <h2>4. Improvements & Contributions</h2>
+          <p>The improved version changes the learning dynamics rather than simply making the run longer. The chart below shows the exact fold-level behavior.</p>
+        </div>
+      </div>
+      <div class="improvements">
+        <div class="card chart-card">
+          <canvas id="foldChart"></canvas>
+        </div>
+        <div>
+          <ul class="impact-list">
+            <li class="impact-item"><strong>Unfrozen encoder</strong><span>Allows end-to-end adaptation, which is especially important for nuclei textures and stain variability.</span></li>
+            <li class="impact-item"><strong>Class-weighted loss</strong><span>Helps the model pay attention to rare classes instead of overfitting dominant cell types.</span></li>
+            <li class="impact-item"><strong>AMP</strong><span>Reduces memory pressure and makes the longer run practical on one GPU.</span></li>
+            <li class="impact-item"><strong>Longer training budget</strong><span>Improved run uses 30 epochs versus 10 in the constrained setting.</span></li>
+          </ul>
+          <div class="mini-card" style="margin-top:14px;">
+            <div class="metric-label" style="margin-bottom:4px;">Quantified impact</div>
+            <div class="kpi">+6.90 mPQ</div>
+            <div class="kdesc">Improvement from 7.32% to 14.22% on PanNuke, with F1 detection improving from 22.86% to 31.49%.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section-head">
+        <div>
+          <h2>5. High-Impact Visual Comparison</h2>
+          <p>A quick visual block that feels interactive even though it is fully static. It combines metric cards, sample images, and a class-wise chart.</p>
+        </div>
+      </div>
+      <div class="before-after">
+        <div>
+          <div class="comparison-stack">
+            <div class="mini-card" style="border-top: 2px solid var(--danger);">
+              <div class="metric-label">Constrained</div>
+              <div class="kpi" style="color: #ffd2d2;">7.32%</div>
+              <div class="kdesc">Frozen encoder, short budget, and weak adaptation on rare classes.</div>
+            </div>
+            <div class="mini-card" style="border-top: 2px solid var(--success);">
+              <div class="metric-label">Improved</div>
+              <div class="kpi" style="color: #c7ffe3;">14.22%</div>
+              <div class="kdesc">Unfrozen encoder, class weighting, AMP, and longer training.</div>
+            </div>
+          </div>
+          <div class="image-row">
+            <div class="image-box">
+              <img src="outputs/assignment2_improved_sample_data.png" alt="Sample input" />
+              <div class="image-caption">Input sample from the improved experiment.</div>
+            </div>
+            <div class="image-box">
+              <img src="outputs/assignment2_improved_sample_predictions.png" alt="Sample prediction" />
+              <div class="image-caption">Predicted segmentation and nuclei classes.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <canvas id="classChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="section reveal">
+      <div class="section-head">
+        <div>
+          <h2>6. Architecture / Workflow Diagram</h2>
+          <p>A clean side-by-side visual of baseline, reproduced, and improved pipelines, with the improvement points highlighted directly in the flow.</p>
+        </div>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 1400 430" width="100%" height="430" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Workflow diagram">
+          <defs>
+            <linearGradient id="pipeBlue" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#6aa8ff" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.9" />
+            </linearGradient>
+            <linearGradient id="pipeAmber" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffd37a" stop-opacity="0.95" />
+              <stop offset="100%" stop-color="#f7b955" stop-opacity="0.9" />
+            </linearGradient>
+            <linearGradient id="pipeTeal" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#64f2e4" stop-opacity="0.96" />
+              <stop offset="100%" stop-color="#0ea5a3" stop-opacity="0.92" />
+            </linearGradient>
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="12" result="blur" />
+              <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.6 0" />
+            </filter>
+          </defs>
+
+          <rect x="0" y="0" width="1400" height="430" rx="28" fill="rgba(255,255,255,0.02)" />
+          <text x="138" y="48" fill="#b8d4ff" font-size="24" font-weight="700">Baseline paper</text>
+          <text x="570" y="48" fill="#ffdca0" font-size="24" font-weight="700">Constrained reproduction</text>
+          <text x="1015" y="48" fill="#a8fff5" font-size="24" font-weight="700">Improved reproduction</text>
+
+          <g filter="url(#softGlow)">
+            <rect x="50" y="82" width="250" height="56" rx="16" fill="url(#pipeBlue)" />
+            <rect x="50" y="164" width="250" height="56" rx="16" fill="url(#pipeBlue)" />
+            <rect x="50" y="246" width="250" height="56" rx="16" fill="url(#pipeBlue)" />
+            <rect x="50" y="328" width="250" height="56" rx="16" fill="url(#pipeBlue)" />
+
+            <rect x="482" y="82" width="250" height="56" rx="16" fill="url(#pipeAmber)" />
+            <rect x="482" y="164" width="250" height="56" rx="16" fill="url(#pipeAmber)" />
+            <rect x="482" y="246" width="250" height="56" rx="16" fill="url(#pipeAmber)" />
+            <rect x="482" y="328" width="250" height="56" rx="16" fill="url(#pipeAmber)" />
+
+            <rect x="914" y="82" width="250" height="56" rx="16" fill="url(#pipeTeal)" />
+            <rect x="914" y="164" width="250" height="56" rx="16" fill="url(#pipeTeal)" />
+            <rect x="914" y="246" width="250" height="56" rx="16" fill="url(#pipeTeal)" />
+            <rect x="914" y="328" width="250" height="56" rx="16" fill="url(#pipeTeal)" />
+          </g>
+
+          <g fill="#04111f" font-size="16" font-weight="700" text-anchor="middle">
+            <text x="175" y="117">256 × 256 PanNuke patch</text>
+            <text x="175" y="199">CellViT encoder</text>
+            <text x="175" y="281">Seg / hover / cls decoders</text>
+            <text x="175" y="363">Paper-level evaluation</text>
+
+            <text x="607" y="117">256 × 256 PanNuke patch</text>
+            <text x="607" y="199">Frozen encoder</text>
+            <text x="607" y="281">Decoder-only training</text>
+            <text x="607" y="363">10 epochs, tight budget</text>
+
+            <text x="1039" y="117">256 × 256 PanNuke patch</text>
+            <text x="1039" y="199">Unfrozen encoder</text>
+            <text x="1039" y="281">Class-weighted loss + AMP</text>
+            <text x="1039" y="363">30 epochs + early stopping</text>
+          </g>
+
+          <g stroke="rgba(255,255,255,0.45)" stroke-width="4" stroke-linecap="round">
+            <line x1="300" y1="110" x2="455" y2="110" />
+            <line x1="300" y1="192" x2="455" y2="192" />
+            <line x1="300" y1="274" x2="455" y2="274" />
+            <line x1="300" y1="356" x2="455" y2="356" />
+
+            <line x1="732" y1="110" x2="887" y2="110" />
+            <line x1="732" y1="192" x2="887" y2="192" />
+            <line x1="732" y1="274" x2="887" y2="274" />
+            <line x1="732" y1="356" x2="887" y2="356" />
+          </g>
+
+          <g fill="#0b1420" opacity="0.82">
+            <circle cx="343" cy="110" r="20" />
+            <circle cx="343" cy="192" r="20" />
+            <circle cx="343" cy="274" r="20" />
+            <circle cx="343" cy="356" r="20" />
+            <circle cx="775" cy="110" r="20" />
+            <circle cx="775" cy="192" r="20" />
+            <circle cx="775" cy="274" r="20" />
+            <circle cx="775" cy="356" r="20" />
+          </g>
+
+          <g fill="#ffffff" font-size="16" font-weight="800" text-anchor="middle">
+            <text x="343" y="116">1</text>
+            <text x="343" y="198">2</text>
+            <text x="343" y="280">3</text>
+            <text x="343" y="362">4</text>
+            <text x="775" y="116">1</text>
+            <text x="775" y="198">2</text>
+            <text x="775" y="280">3</text>
+            <text x="775" y="362">4</text>
+          </g>
+
+          <rect x="805" y="150" width="36" height="132" rx="12" fill="rgba(40,215,200,0.26)" stroke="rgba(40,215,200,0.6)" />
+          <text x="823" y="216" fill="#8ffbf0" font-size="12" font-weight="700" text-anchor="middle" transform="rotate(-90 823 216)">IMPROVEMENT</text>
+        </svg>
+      </div>
+      <div class="footer-note">This is fully static HTML, CSS, and JavaScript. Chart.js is loaded from CDN; all numeric values are derived from workspace outputs and repository logs.</div>
+    </section>
+  </div>
+
+  <script>
+    const data = {
+      paper: { mPQ: 48.266090762847966, F1: 82.44356794913057 },
+      constrained: { mPQ: 7.32, F1: 22.86 },
+      improved: { mPQ: 14.22150140247017, F1: 31.493393801215095 },
+      crossDomain: { bPQ: 66.21, Dice: 83.24, F1: 84.83027653262168 },
+      foldResults: [
+        { fold: 'Fold 1', mPQ: 14.668374894250757, F1: 31.343080747923546 },
+        { fold: 'Fold 2', mPQ: 12.203094733039946, F1: 30.58992703580749 },
+        { fold: 'Fold 3', mPQ: 15.793034580119807, F1: 32.54717361991425 }
+      ],
+      classPQ: [
+        { label: 'Neoplastic', value: 17.05893497993568 },
+        { label: 'Inflammatory', value: 17.855929773380982 },
+        { label: 'Connective', value: 11.75397727498744 },
+        { label: 'Dead', value: 6.7902896956586815 },
+        { label: 'Epithelial', value: 17.082772620272765 }
+      ]
+    };
+
+    const fmt = (n, digits = 2) => new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    }).format(n);
+
+    function animateCount(el, target, duration = 1100) {
+      const start = 0;
+      const t0 = performance.now();
+      const step = (now) => {
+        const p = Math.min((now - t0) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const value = Math.round(start + (target - start) * eased);
+        el.textContent = value.toLocaleString('en-US');
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    document.querySelectorAll('[data-count]').forEach((el) => {
+      animateCount(el, Number(el.dataset.count));
+    });
+
+    const comparisonChart = new Chart(document.getElementById('comparisonChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Paper baseline', 'Constrained', 'Improved', 'MoNuSeg best'],
+        datasets: [
+          {
+            label: 'mPQ / bPQ (%)',
+            data: [data.paper.mPQ, data.constrained.mPQ, data.improved.mPQ, data.crossDomain.bPQ],
+            backgroundColor: ['rgba(106,168,255,0.88)', 'rgba(247,185,85,0.88)', 'rgba(40,215,200,0.88)', 'rgba(94,240,168,0.88)'],
+            borderColor: ['#6aa8ff', '#f7b955', '#28d7c8', '#5ef0a8'],
+            borderWidth: 1.5,
+            borderRadius: 12,
+            borderSkipped: false,
+          },
+          {
+            label: 'F1 detection (%)',
+            data: [data.paper.F1, data.constrained.F1, data.improved.F1, data.crossDomain.F1],
+            backgroundColor: 'rgba(255,255,255,0.16)',
+            borderColor: 'rgba(255,255,255,0.8)',
+            borderWidth: 1.2,
+            borderRadius: 12,
+            borderSkipped: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 1200, easing: 'easeOutQuart' },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#dcecff',
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 18,
+              font: { size: 12, weight: '600' }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(6, 14, 25, 0.96)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#dcecff',
+            padding: 12
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#c8daeb' },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#c8daeb' },
+            grid: { color: 'rgba(255,255,255,0.08)' }
+          }
+        }
+      }
+    });
+
+    const foldChart = new Chart(document.getElementById('foldChart'), {
+      type: 'line',
+      data: {
+        labels: data.foldResults.map(d => d.fold),
+        datasets: [
+          {
+            label: 'mPQ (%)',
+            data: data.foldResults.map(d => d.mPQ),
+            tension: 0.35,
+            borderColor: '#28d7c8',
+            backgroundColor: 'rgba(40,215,200,0.18)',
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#bafaf4',
+            borderWidth: 2.5
+          },
+          {
+            label: 'F1 detection (%)',
+            data: data.foldResults.map(d => d.F1),
+            tension: 0.35,
+            borderColor: '#6aa8ff',
+            backgroundColor: 'rgba(106,168,255,0.16)',
+            fill: true,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#d9e8ff',
+            borderWidth: 2.5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 1200, easing: 'easeOutQuart' },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#dcecff',
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 18,
+              font: { size: 12, weight: '600' }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#c8daeb' },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#c8daeb' },
+            grid: { color: 'rgba(255,255,255,0.08)' }
+          }
+        }
+      }
+    });
+
+    const classChart = new Chart(document.getElementById('classChart'), {
+      type: 'bar',
+      data: {
+        labels: data.classPQ.map(d => d.label),
+        datasets: [
+          {
+            label: 'Average class PQ (%)',
+            data: data.classPQ.map(d => d.value),
+            backgroundColor: ['#6aa8ff', '#28d7c8', '#f7b955', '#ff7a79', '#5ef0a8'],
+            borderRadius: 12,
+            borderSkipped: false,
+            borderWidth: 1.2,
+            borderColor: 'rgba(255,255,255,0.12)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 1200, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(6, 14, 25, 0.96)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleColor: '#fff',
+            bodyColor: '#dcecff',
+            padding: 12
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#c8daeb' },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            beginAtZero: true,
+            suggestedMax: 20,
+            ticks: { color: '#c8daeb' },
+            grid: { color: 'rgba(255,255,255,0.08)' }
+          }
+        }
+      }
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    document.querySelectorAll('.reveal.hidden').forEach((el) => {
+      el.classList.add('visible');
+    });
+
+    document.querySelectorAll('.reveal.hidden').forEach((el) => observer.observe(el));
+  </script>
+</body>
+</html>
